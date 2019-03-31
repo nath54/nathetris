@@ -127,6 +127,7 @@ def detect_rang(cubes,points):
     for c in cubes: j[c.px,c.py]=1
     rt=[]
     adel=[]
+    nbrmt=0
     for y in range(ty):
         rang=True
         for x in range(tx):
@@ -134,11 +135,12 @@ def detect_rang(cubes,points):
                 rang=False
                 break
         if rang :
+            nbrmt+=1
             for c in cubes:
                 if c.py==y:
                     adel.append(c)
                     j[c.px,c.py]=0
-                    points+=1
+                    points+=1*nbrmt
             for c in cubes:
                 if c.py<y:
                     c.py+=1
@@ -154,11 +156,11 @@ def detect_perdu(cubes):
             break
     return perdu
 
-def ccc(cbs,cenc,dtc,tac,points):
+def ccc(cbs,cenc,dtc,tac,points,mode):
     perdu=False
     if time.time()-dtc >= tac:
         dtc=time.time()
-        if tac > 0.1: tac-=0.0001
+        if tac > 0.2: tac-=0.001
         j=numpy.zeros([tx,ty])
         for c in cbs:
             j[c.px,c.py]=1
@@ -179,7 +181,7 @@ def ccc(cbs,cenc,dtc,tac,points):
     return cbs,cenc,dtc,perdu,points,tac
 
 
-def aff(cbs,cenc,dta,taf,points):
+def aff(cbs,cenc,dta,taf,points,mode,tps):
     if time.time()-dta >= taf:
         dta=time.time()
         fenetre.fill((30,30,30))
@@ -197,19 +199,23 @@ def aff(cbs,cenc,dta,taf,points):
         for c in cbs+cenc.cubes: pygame.draw.rect(fenetre,c.cl,(pdx+(c.px*tc),pdy+(c.py*tc),tc,tc),0)
         #points
         fenetre.blit( font.render("score : "+str(points),20,(250,250,250)) , [rx(520),ry(400)] )
+        fenetre.blit( font.render("tps tomber : "+str(tac),20,(250,250,250)) , [rx(520),ry(500)] )
+        fenetre.blit( font.render("tps : "+str(int(tps))+" sec",20,(250,250,250)) , [rx(520),ry(450)] )
         pygame.display.update()
     return dta
     
-def game1(dtc,dta):
-    keys=[K_DOWN,K_LEFT,K_RIGHT,K_KP1,K_KP2,K_KP3]
+def game1(dtc,dta,tac,taf,mode):
+    keys=[K_DOWN,K_LEFT,K_RIGHT,K_SPACE,K_b,K_v]
     cubes=[]
     cubeencour=newcenc()
     encourg=True
     perdu=False
     points=0
+    tps=0
     while encourg:
-        cubes,cubeencour,dtc,perdu,points,tac=ccc(cubes,cubeencour,dtc,tac,points)
-        dta=aff(cubes,cubeencour,dta,taf,points)
+        tt=time.time()
+        cubes,cubeencour,dtc,perdu,points,tac=ccc(cubes,cubeencour,dtc,tac,points,mode)
+        dta=aff(cubes,cubeencour,dta,taf,points,mode,tps)
         for event in pygame.event.get():
             if event.type==QUIT: encourg=False
             elif event.type==KEYDOWN:
@@ -227,6 +233,7 @@ def game1(dtc,dta):
         if perdu:
             encourg=False
             break
+        tps+=time.time()-tt
     if perdu:
         fenetre.blit( font.render("Vous avez perdu",20,(255,255,255)),[rx(150),ry(50)])
         fenetre.blit( font.render("Veuillez appuyer sur SPACE pour retourner au menu",20,(255,255,255)),[rx(150),ry(100)])
@@ -238,7 +245,8 @@ def game1(dtc,dta):
                 if event.key==K_q: perdu=False
                 elif event.key==K_SPACE: perdu=False
 
-game1(dtc,dta)
+mode=0
+game1(dtc,dta,tac,taf,mode)
 
 
 
