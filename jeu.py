@@ -11,10 +11,10 @@ pygame.display.set_caption("NATHETRIS")
 font=pygame.font.SysFont("Serif",20)
 
 dtc=time.time()
-tac=0.5
+tac=0.5000
 
 dta=time.time()
-taf=0.1
+taf=0.05
 
 tx,ty=15,20
 
@@ -29,8 +29,13 @@ class Cube:
         self.py=y
         self.cl=cl
 
-figs=[ [ [ [0,1] , [1,1] , [2,1] , [3,1] ] , [ [2,0] , [2,1] , [2,2] , [2,3] ] ],
-       [ [ [1,1],[1,2],[2,1],[2,2] ] ]
+figs=[ [ [[0,1],[1,1],[2,1],[3,1]] , [[2,0],[2,1],[2,2],[2,3]] ],
+       [ [[1,1],[1,2],[2,1],[2,2]] ],
+       [ [[1,1],[1,2],[1,3],[2,3]] , [[0,2],[1,2],[2,2],[2,1]] , [[1,1],[2,1],[2,2],[2,3]] , [[0,1],[1,1],[2,1],[0,2]] ],
+       [ [[2,1],[2,2],[2,3],[1,3]] , [[0,1],[0,2],[1,2],[2,2]] , [[1,1],[1,2],[1,3],[2,1]] , [[0,1],[1,1],[2,1],[2,2]] ],
+       [ [[1,1],[0,2],[1,2],[2,2]] , [[1,1],[1,2],[1,3],[2,2]] , [[0,1],[1,1],[2,1],[1,2]] , [[2,1],[2,2],[2,3],[1,2]] ],
+       [ [[1,1],[1,2],[2,2],[2,3]] , [[1,2],[2,2],[2,1],[3,1]] ],
+       [ [[2,1],[2,2],[1,2],[1,3]] , [[1,1],[2,1],[2,2],[3,2]] ]
 ]
 
 def verif_pos(posc,cubes):
@@ -112,7 +117,8 @@ class Fig:
 def newcenc():
     fig=Fig(int(tx/2),0,random.randint(0,len(figs)-1))
     cl=rcl()
-    for p in fig.pcs[0]:
+    fig.pa=random.randint(0,len(fig.pcs)-1)
+    for p in fig.pcs[fig.pa]:
         fig.cubes.append( Cube(fig.px+p[0],fig.py+p[1],cl) )
     return fig
 
@@ -152,6 +158,7 @@ def ccc(cbs,cenc,dtc,tac,points):
     perdu=False
     if time.time()-dtc >= tac:
         dtc=time.time()
+        if tac > 0.1: tac-=0.0001
         j=numpy.zeros([tx,ty])
         for c in cbs:
             j[c.px,c.py]=1
@@ -169,7 +176,7 @@ def ccc(cbs,cenc,dtc,tac,points):
             cbs,points=detect_rang(cbs,points)
             perdu=detect_perdu(cbs)
             cenc=newcenc()
-    return cbs,cenc,dtc,perdu,points
+    return cbs,cenc,dtc,perdu,points,tac
 
 
 def aff(cbs,cenc,dta,taf,points):
@@ -189,7 +196,7 @@ def aff(cbs,cenc,dta,taf,points):
         #cubes
         for c in cbs+cenc.cubes: pygame.draw.rect(fenetre,c.cl,(pdx+(c.px*tc),pdy+(c.py*tc),tc,tc),0)
         #points
-        fenetre.blit( font.render("score : "+str(points),20,(250,250,250)) , [rx(20),ry(400)] )
+        fenetre.blit( font.render("score : "+str(points),20,(250,250,250)) , [rx(520),ry(400)] )
         pygame.display.update()
     return dta
     
@@ -201,7 +208,7 @@ def game1(dtc,dta):
     perdu=False
     points=0
     while encourg:
-        cubes,cubeencour,dtc,perdu,points=ccc(cubes,cubeencour,dtc,tac,points)
+        cubes,cubeencour,dtc,perdu,points,tac=ccc(cubes,cubeencour,dtc,tac,points)
         dta=aff(cubes,cubeencour,dta,taf,points)
         for event in pygame.event.get():
             if event.type==QUIT: encourg=False
