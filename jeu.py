@@ -42,6 +42,9 @@ figs=[ [ [[0,1],[1,1],[2,1],[3,1]] , [[2,0],[2,1],[2,2],[2,3]] ],
        
 ]
 
+clfs=[]
+for f in figs: clfs.append(rcl())
+
 def verif_pos(posc,cubes,tx,ty):
     pastch=True
     if posc[0] >= tx: pastch=False
@@ -118,9 +121,12 @@ class Fig:
                     c.px=self.px+self.pcs[self.pa][self.cubes.index(c)][0]
                     c.py=self.py+self.pcs[self.pa][self.cubes.index(c)][1]
 
-def newcenc(tx,ty):
-    fig=Fig(int(tx/2),0,random.randint(0,len(figs)-1))
-    cl=rcl()
+def newcenc(tx,ty,modcl):
+    f=random.randint(0,len(figs)-1)
+    fig=Fig(int(tx/2),0,f)
+    if modcl == 0 : cl=rcl()
+    elif modcl == 1 : cl=clfs[f]
+    elif modcl == 2 : cl=(255,255,255)
     fig.pa=random.randint(0,len(fig.pcs)-1)
     for p in fig.pcs[fig.pa]:
         fig.cubes.append( Cube(fig.px+p[0],fig.py+p[1],cl) )
@@ -160,7 +166,7 @@ def detect_perdu(cubes,tx,ty):
             break
     return perdu
 
-def ccc(cbs,cenc,dtc,tac,points,mode,tx,ty,mintac,dimtac):
+def ccc(cbs,cenc,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl):
     perdu=False
     if time.time()-dtc >= tac:
         dtc=time.time()
@@ -181,7 +187,7 @@ def ccc(cbs,cenc,dtc,tac,points,mode,tx,ty,mintac,dimtac):
                 cbs.append(c)
             cbs,points=detect_rang(cbs,points,tx,ty)
             perdu=detect_perdu(cbs,tx,ty)
-            cenc=newcenc(tx,ty)
+            cenc=newcenc(tx,ty,modecl)
     return cbs,cenc,dtc,perdu,points,tac
 
 
@@ -210,14 +216,14 @@ def aff(cbs,cenc,dta,taf,points,mode,tps,tx,ty):
 def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac):
     keys=[K_DOWN,K_LEFT,K_RIGHT,K_SPACE,K_b,K_v]
     cubes=[]
-    cubeencour=newcenc(tx,ty)
+    cubeencour=newcenc(tx,ty,modecl)
     encourg=True
     perdu=False
     points=0
     tps=0
     while encourg:
         tt=time.time()
-        cubes,cubeencour,dtc,perdu,points,tac=ccc(cubes,cubeencour,dtc,tac,points,mode,tx,ty,mintac,dimtac)
+        cubes,cubeencour,dtc,perdu,points,tac=ccc(cubes,cubeencour,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl)
         dta=aff(cubes,cubeencour,dta,taf,points,mode,tps,tx,ty)
         for event in pygame.event.get():
             if event.type==QUIT: encourg=False
