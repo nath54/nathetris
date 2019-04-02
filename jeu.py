@@ -2,7 +2,7 @@
 import random,time,pygame,numpy
 from pygame.locals import *
 
-tex,tey=700,900
+tex,tey=550,750
 
 pygame.init()
 fenetre=pygame.display.set_mode([tex,tey])
@@ -54,7 +54,7 @@ def verif_pos(posc,cubes,tx,ty,acenc):
             if posc[0]==c.px and posc[1]==c.py:
                 pastch=False
                 break
-    if pastch:
+    if pastch and acenc!=None:
         for c in acenc.cubes:
             if posc[0]==c.px and posc[1]==c.py:
                 pastch=False
@@ -245,18 +245,20 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj):
         for event in pygame.event.get():
             if event.type==QUIT: encourg=False
             elif event.type==KEYDOWN:
+                if nbj==2: ceec=cubeencours[1]
+                else: ceec=None
                 if event.key==K_q: encourg=False
                 #player1
                 elif event.key==keys[0]:
-                    cubeencours[0].bouger("bas",cubes,tx,ty,cubeencours[1])
+                    cubeencours[0].bouger("bas",cubes,tx,ty,ceec)
                 elif event.key==keys[1]:
-                    cubeencours[0].bouger("gauche",cubes,tx,ty,cubeencours[1])
+                    cubeencours[0].bouger("gauche",cubes,tx,ty,ceec)
                 elif event.key==keys[2]:
-                    cubeencours[0].bouger("droite",cubes,tx,ty,cubeencours[1])
+                    cubeencours[0].bouger("droite",cubes,tx,ty,ceec)
                 elif event.key==keys[3]:
-                    cubeencours[0].bouger("rot gauche",cubes,tx,ty,cubeencours[1])
+                    cubeencours[0].bouger("rot gauche",cubes,tx,ty,ceec)
                 elif event.key==keys[4]:
-                    cubeencours[0].bouger("rot droite",cubes,tx,ty,cubeencours[1])
+                    cubeencours[0].bouger("rot droite",cubes,tx,ty,ceec)
                 #player2
                 if nbj==2:
                     if event.key==keys2[0]:
