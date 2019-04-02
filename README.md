@@ -1,5 +1,7 @@
 # nathetris
 
+Description :
+-------------
 
 Voici un remix de Tetris, développé
 
@@ -21,9 +23,10 @@ Sur le même écran et le même plateau,
 
 De voir ses blocs monter tout en haut.
 
-#commandes:
+commandes:
+----------
 
-Les touches du joueur 1 sont :
+__Les touches du joueur 1 sont :__
 
     -bas     : flèche bas
     
@@ -33,7 +36,7 @@ Les touches du joueur 1 sont :
     
     -pivoter : flèche gauche
 
-Les touches du joueur 2 sont :
+__Les touches du joueur 2 sont :__
 
     -bas     : k
     
