@@ -1,4 +1,4 @@
-# nathetris
+# Nathetris
 
 Description :
 -------------
