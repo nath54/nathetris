@@ -15,7 +15,7 @@ La difficulté, l'accélération,
 
 Il y a même un mode coopération.
 
-Celui-ci ce joue à deux joueurs,
+Celui-ci se joue à deux joueurs,
 
 Il vous faudra éviter d'avoir la peur,
 
