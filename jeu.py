@@ -124,10 +124,12 @@ class Fig:
                     c.px=self.px+self.pcs[self.pa][self.cubes.index(c)][0]
                     c.py=self.py+self.pcs[self.pa][self.cubes.index(c)][1]
 
-def newcenc(tx,ty,modcl):
+def newcenc(tx,ty,modcl,acenc):
     f=random.randint(0,len(figs)-1)
     fig=Fig(int(tx/2),0,f)
     fig.px=random.randint(1,tx-5)
+    if acenc!=None:
+        while abs(acenc.px-fig.px)<4: fig.px=random.randint(1,tx-5)
     if modcl == 0 : cl=rcl()
     elif modcl == 1 : cl=clfs[f]
     elif modcl == 2 : cl=(255,255,255)
@@ -194,7 +196,11 @@ def ccc(cbs,cencs,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl):
                     cbs.append(c)
                 cbs,points=detect_rang(cbs,points,tx,ty)
                 perdu=detect_perdu(cbs,tx,ty)
-                cencs[cencs.index(cenc)]=newcenc(tx,ty,modecl)
+                if len(cencs)==2:
+                    if cencs.index(cenc)==0: ceec=cencs[1]
+                    else: ceec=cencs[0]
+                else: ceec=None
+                cencs[cencs.index(cenc)]=newcenc(tx,ty,modecl,ceec)
     return cbs,cencs,dtc,perdu,points,tac
 
 
@@ -222,11 +228,12 @@ def aff(cbs,cencs,dta,taf,points,mode,tps,tx,ty):
     return dta
     
 def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj):
-    keys=[K_DOWN,K_LEFT,K_RIGHT,K_SPACE,K_b,K_v]
+    keys=[K_DOWN,K_LEFT,K_RIGHT,K_UP,K_b,K_v]
     keys2=[K_k,K_j,K_l,K_i,K_u,K_o]
     cubes=[]
     cubeencours=[]
-    for x in range(nbj): cubeencours.append( newcenc(tx,ty,modecl) )
+    cubeencours.append( newcenc(tx,ty,modecl,None) )
+    if nbj==2: cubeencours.append( newcenc(tx,ty,modecl,cubeencours[0]) ) 
     encourg=True
     perdu=False
     points=0
