@@ -21,9 +21,7 @@ Sur le même écran et le même plateau,
 
 De voir ses blocs monter tout en haut.
 
-
-
-
+#commandes:
 
 Les touches du joueur 1 sont :
 
