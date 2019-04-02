@@ -11,7 +11,7 @@ Numpy. Vous pouvez paramétrer pleins
 
 De choses, commes les couleurs, ou bien
 
-La difficulté, l'accélération,
+La difficulté, l'accélération.
 
 Il y a même un mode coopération.
 
