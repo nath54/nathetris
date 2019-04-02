@@ -43,7 +43,7 @@ figs=[ [ [[0,1],[1,1],[2,1],[3,1]] , [[2,0],[2,1],[2,2],[2,3]] ],
 clfs=[]
 for f in figs: clfs.append(rcl())
 
-def verif_pos(posc,cubes,tx,ty):
+def verif_pos(posc,cubes,tx,ty,acenc):
     pastch=True
     if posc[0] >= tx: pastch=False
     if posc[0] < 0: pastch=False
@@ -51,6 +51,11 @@ def verif_pos(posc,cubes,tx,ty):
     if posc[1] < 0: pastch=False
     if pastch:
         for c in cubes:
+            if posc[0]==c.px and posc[1]==c.py:
+                pastch=False
+                break
+    if pastch:
+        for c in acenc.cubes:
             if posc[0]==c.px and posc[1]==c.py:
                 pastch=False
                 break
@@ -65,11 +70,11 @@ class Fig:
         self.pa=0
         self.pcs=figs[f]
         self.cubes=[]
-    def bouger(self,aa,cubes,tx,ty):
+    def bouger(self,aa,cubes,tx,ty,acenc):
         if aa=="bas":
             can=True
             for c in self.cubes:
-                if not verif_pos([c.px,c.py+1],cubes,tx,ty): can=False
+                if not verif_pos([c.px,c.py+1],cubes,tx,ty,acenc): can=False
             if can:
                 self.py+=1
                 for c in self.cubes:
@@ -77,14 +82,14 @@ class Fig:
         elif aa=="gauche":
             can=True
             for c in self.cubes:
-                if not verif_pos([c.px-1,c.py],cubes,tx,ty): can=False
+                if not verif_pos([c.px-1,c.py],cubes,tx,ty,acenc): can=False
             if can:
                 self.px-=1
                 for c in self.cubes: c.px-=1
         elif aa=="droite":
             can=True
             for c in self.cubes:
-                if not verif_pos([c.px+1,c.py],cubes,tx,ty): can=False
+                if not verif_pos([c.px+1,c.py],cubes,tx,ty,acenc): can=False
             if can:
                 self.px+=1
                 for c in self.cubes: c.px+=1
@@ -96,7 +101,7 @@ class Fig:
                 c.py=self.py+self.pcs[self.pa][self.cubes.index(c)][1]
             tch=False
             for c in self.cubes:
-                if not verif_pos([c.px,c.py],cubes,tx,ty): tch=True
+                if not verif_pos([c.px,c.py],cubes,tx,ty,acenc): tch=True
             if tch:
                 self.pa+=1
                 if self.pa>len(self.pcs)-1: self.pa=0
@@ -111,7 +116,7 @@ class Fig:
                 c.py=self.py+self.pcs[self.pa][self.cubes.index(c)][1]
             tch=False
             for c in self.cubes:
-                if not verif_pos([c.px,c.py],cubes,tx,ty): tch=True
+                if not verif_pos([c.px,c.py],cubes,tx,ty,acenc): tch=True
             if tch:
                 self.pa-=1
                 if self.pa<0: self.pa=len(self.pcs)-1
@@ -122,6 +127,7 @@ class Fig:
 def newcenc(tx,ty,modcl):
     f=random.randint(0,len(figs)-1)
     fig=Fig(int(tx/2),0,f)
+    fig.px=random.randint(1,tx-5)
     if modcl == 0 : cl=rcl()
     elif modcl == 1 : cl=clfs[f]
     elif modcl == 2 : cl=(255,255,255)
@@ -164,7 +170,7 @@ def detect_perdu(cubes,tx,ty):
             break
     return perdu
 
-def ccc(cbs,cenc,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl):
+def ccc(cbs,cencs,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl):
     perdu=False
     if time.time()-dtc >= tac:
         dtc=time.time()
@@ -172,24 +178,27 @@ def ccc(cbs,cenc,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl):
         j=numpy.zeros([tx,ty])
         for c in cbs:
             j[c.px,c.py]=1
-        tf=False
-        for c in cenc.cubes:
-            if c.py+1==ty or j[c.px,c.py+1]==1:
-                tf=True
-        if not tf:
+        tfs=[False,False]
+        for cenc in cencs:
             for c in cenc.cubes:
-                c.py+=1
-            cenc.py+=1
-        else:
-            for c in cenc.cubes:
-                cbs.append(c)
-            cbs,points=detect_rang(cbs,points,tx,ty)
-            perdu=detect_perdu(cbs,tx,ty)
-            cenc=newcenc(tx,ty,modecl)
-    return cbs,cenc,dtc,perdu,points,tac
+                if c.py+1==ty or j[c.px,c.py+1]==1:
+                    tfs[cencs.index(cenc)]=True
+        for cenc in cencs:
+            tf=tfs[cencs.index(cenc)]
+            if not tf:
+                for c in cenc.cubes:
+                    c.py+=1
+                cenc.py+=1
+            else:
+                for c in cenc.cubes:
+                    cbs.append(c)
+                cbs,points=detect_rang(cbs,points,tx,ty)
+                perdu=detect_perdu(cbs,tx,ty)
+                cencs[cencs.index(cenc)]=newcenc(tx,ty,modecl)
+    return cbs,cencs,dtc,perdu,points,tac
 
 
-def aff(cbs,cenc,dta,taf,points,mode,tps,tx,ty):
+def aff(cbs,cencs,dta,taf,points,mode,tps,tx,ty):
     if time.time()-dta >= taf:
         dta=time.time()
         fenetre.fill((30,30,30))
@@ -204,39 +213,55 @@ def aff(cbs,cenc,dta,taf,points,mode,tps,tx,ty):
             else: cll=(150,150,150)
             pygame.draw.line(fenetre,cll,(pdx,pdy+(y*tc)),(pdx+(tx*tc),pdy+(y*tc)),1)
         #cubes
-        for c in cbs+cenc.cubes: pygame.draw.rect(fenetre,c.cl,(pdx+(c.px*tc),pdy+(c.py*tc),tc,tc),0)
+        for cenc in cencs:
+            for c in cbs+cenc.cubes: pygame.draw.rect(fenetre,c.cl,(pdx+(c.px*tc),pdy+(c.py*tc),tc,tc),0)
         #points
         fenetre.blit( font.render("score : "+str(points),20,(250,250,250)) , [rx(300),ry(700)] )
         fenetre.blit( font.render("tps : "+str(int(tps))+" sec",20,(250,250,250)) , [rx(300),ry(750)] )
         pygame.display.update()
     return dta
     
-def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac):
+def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj):
     keys=[K_DOWN,K_LEFT,K_RIGHT,K_SPACE,K_b,K_v]
+    keys2=[K_k,K_j,K_l,K_i,K_u,K_o]
     cubes=[]
-    cubeencour=newcenc(tx,ty,modecl)
+    cubeencours=[]
+    for x in range(nbj): cubeencours.append( newcenc(tx,ty,modecl) )
     encourg=True
     perdu=False
     points=0
     tps=0
     while encourg:
         tt=time.time()
-        cubes,cubeencour,dtc,perdu,points,tac=ccc(cubes,cubeencour,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl)
-        dta=aff(cubes,cubeencour,dta,taf,points,mode,tps,tx,ty)
+        cubes,cubeencours,dtc,perdu,points,tac=ccc(cubes,cubeencours,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl)
+        dta=aff(cubes,cubeencours,dta,taf,points,mode,tps,tx,ty)
         for event in pygame.event.get():
             if event.type==QUIT: encourg=False
             elif event.type==KEYDOWN:
                 if event.key==K_q: encourg=False
+                #player1
                 elif event.key==keys[0]:
-                    cubeencour.bouger("bas",cubes,tx,ty)
+                    cubeencours[0].bouger("bas",cubes,tx,ty,cubeencours[1])
                 elif event.key==keys[1]:
-                    cubeencour.bouger("gauche",cubes,tx,ty)
+                    cubeencours[0].bouger("gauche",cubes,tx,ty,cubeencours[1])
                 elif event.key==keys[2]:
-                    cubeencour.bouger("droite",cubes,tx,ty)
+                    cubeencours[0].bouger("droite",cubes,tx,ty,cubeencours[1])
                 elif event.key==keys[3]:
-                    cubeencour.bouger("rot gauche",cubes,tx,ty)
+                    cubeencours[0].bouger("rot gauche",cubes,tx,ty,cubeencours[1])
                 elif event.key==keys[4]:
-                    cubeencour.bouger("rot droite",cubes,tx,ty)
+                    cubeencours[0].bouger("rot droite",cubes,tx,ty,cubeencours[1])
+                #player2
+                if nbj==2:
+                    if event.key==keys2[0]:
+                        cubeencours[1].bouger("bas",cubes,tx,ty,cubeencours[0])
+                    elif event.key==keys2[1]:
+                        cubeencours[1].bouger("gauche",cubes,tx,ty,cubeencours[0])
+                    elif event.key==keys2[2]:
+                        cubeencours[1].bouger("droite",cubes,tx,ty,cubeencours[0])
+                    elif event.key==keys2[3]:
+                        cubeencours[1].bouger("rot gauche",cubes,tx,ty,cubeencours[0])
+                    elif event.key==keys2[4]:
+                        cubeencours[1].bouger("rot droite",cubes,tx,ty,cubeencours[0])
         if perdu:
             encourg=False
             break
@@ -278,7 +303,7 @@ def affmenu(modecl,mode,tx,tac,dimtac):
     a=(50,50,50)
     b=(50,250,50)
     clbs=[]
-    for x in range(16): clbs.append(a)
+    for x in range(20): clbs.append(a)
     #
     bts[0]=boutton(200,550,200,100,(150,150,0))
     texte("jouer",240,570,30,(150,0,0))
@@ -323,9 +348,12 @@ def affmenu(modecl,mode,tx,tac,dimtac):
     texte(">>>",305,365,15,(255,255,255))
     #
     if mode==0: clbs[15]=b
+    if mode==1: clbs[16]=b
     texte("mode jeu",420,200,20,(250,250,250))
     bts[16]=boutton(400,240,100,30,clbs[15])
+    bts[17]=boutton(400,280,100,30,clbs[16])
     texte("standar",405,245,15,(255,255,255))
+    texte("cooperation",405,285,15,(255,255,255))
     #
     if tx==10: clbs[12]=b
     elif tx==15: clbs[13]=b
@@ -356,6 +384,7 @@ def menu():
     playgame=False
     mode=0
     modecl=0
+    nbj=1
     bts=[]
     while encourmenu:
         if needtoaff:
@@ -388,10 +417,11 @@ def menu():
                         elif di==13: tx,ty=15,20
                         elif di==14: tx,ty=20,25
                         elif di==15: exit()
-                        elif di==16: mode=0
+                        elif di==16: mode,nbj=0,1
+                        elif di==17: mode,nbj=1,2
     if playgame :
         playgame=False
-        game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac)
+        game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj)
 
 #########
 
