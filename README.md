@@ -22,15 +22,26 @@ Sur le même écran et le même plateau,
 De voir ses blocs monter tout en haut.
 
 
+
+
+
 Les touches du joueur 1 sont :
+
     -bas     : flèche bas
+    
     -gauche  : flèche gauche
+    
     -droite  : flèche droite
+    
     -pivoter : flèche gauche
 
 Les touches du joueur 2 sont :
+
     -bas     : k
+    
     -gauche  : j
+    
     -droite  : l
+    
     -pivoter : i
 
