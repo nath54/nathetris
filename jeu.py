@@ -160,7 +160,7 @@ class Fig:
                     c.px=self.px+self.pcs[self.pa][self.cubes.index(c)][0]
                     c.py=self.py+self.pcs[self.pa][self.cubes.index(c)][1]
 
-def newcenc(tx,ty,modcl,acenc):
+def newcenc(tx,ty,modcl,acenc,acl):
     f=random.randint(0,len(figs)-1)
     fig=Fig(int(tx/2),0,f)
     fig.px=random.randint(1,tx-5)
@@ -169,6 +169,17 @@ def newcenc(tx,ty,modcl,acenc):
     if modcl == 0 : cl=rcl()
     elif modcl == 1 : cl=clfs[f]
     elif modcl == 2 : cl=(255,255,255)
+    elif modcl == 3:
+        #r=random.randint(0,2)
+        acl=list(acl)
+        j=7
+        acl[0]+=random.randint(-j,j)
+        acl[1]+=random.randint(-j,j)
+        acl[2]+=random.randint(-j,j)
+        for r in range(3):
+            if acl[r]>255: acl[r]=255
+            if acl[r]<0: acl[r]=0
+        cl=acl
     fig.pa=random.randint(0,len(fig.pcs)-1)
     for p in fig.pcs[fig.pa]:
         fig.cubes.append( Cube(fig.px+p[0],fig.py+p[1],cl) )
@@ -230,13 +241,14 @@ def ccc(cbs,cencs,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl):
             else:
                 for c in cenc.cubes:
                     cbs.append(c)
+                    acl=c.cl
                 cbs,points=detect_rang(cbs,points,tx,ty)
                 perdu=detect_perdu(cbs,tx,ty)
                 if len(cencs)==2:
                     if cencs.index(cenc)==0: ceec=cencs[1]
                     else: ceec=cencs[0]
                 else: ceec=None
-                cencs[cencs.index(cenc)]=newcenc(tx,ty,modecl,ceec)
+                cencs[cencs.index(cenc)]=newcenc(tx,ty,modecl,ceec,acl)
     return cbs,cencs,dtc,perdu,points,tac
 
 
@@ -278,7 +290,7 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
     keys2=[K_k,K_j,K_l,K_i,K_u,K_o]
     cubes=[]
     cubeencours=[]
-    cubeencours.append( newcenc(tx,ty,modecl,None) )
+    cubeencours.append( newcenc(tx,ty,modecl,None,rcl()) )
     if nbj==2: cubeencours.append( newcenc(tx,ty,modecl,cubeencours[0]) ) 
     encourg=True
     perdu=False
@@ -351,7 +363,7 @@ def boutton(x,y,tx,ty,cl):
 
 def affmenu(modecl,mode,tx,tac,dimtac,bot):
     bts=[]
-    for x in range(21): bts.append(None)
+    for x in range(23): bts.append(None)
     fenetre.fill(clf)
     texte("N",100,80,80,rcl())
     texte("A",150,80,80,rcl())
@@ -365,7 +377,7 @@ def affmenu(modecl,mode,tx,tac,dimtac,bot):
     a=(50,50,50)
     b=(50,250,50)
     clbs=[]
-    for x in range(20): clbs.append(a)
+    for x in range(23): clbs.append(a)
     #
     bts[0]=boutton(200,550,200,100,(150,150,0))
     texte("jouer",240,570,30,(150,0,0))
@@ -373,13 +385,16 @@ def affmenu(modecl,mode,tx,tac,dimtac,bot):
     if modecl==0: clbs[0]=b
     elif modecl==1: clbs[1]=b
     elif modecl==2: clbs[2]=b
+    elif modecl==3: clbs[20]=b
     texte("mode couleur",20,200,20,(250,250,250))
     bts[1]=boutton(20,240,100,30,clbs[0])
     bts[2]=boutton(20,280,100,30,clbs[1])
     bts[3]=boutton(20,320,100,30,clbs[2])
+    bts[21]=boutton(20,360,100,30,clbs[20])
     texte("normal",25,245,15,(255,255,255))
     texte("uniques",25,285,15,(255,255,255))
     texte("noir et blanc",25,325,15,(255,255,255))
+    texte("dégradé",25,365,15,(255,255,255))
     #
     if tac==0.5: clbs[4]=b
     elif tac==0.4: clbs[5]=b
@@ -492,6 +507,7 @@ def menu():
                         elif di==16: mode,nbj=0,1
                         elif di==17: mode,nbj,bot=1,2,0
                         elif di==18: mode,nbj,bot=1,2,1
+                        elif di==21: modecl=3
     if playgame :
         playgame=False
         game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot)
