@@ -3,10 +3,11 @@
 Introduction :
 --------------
 
-Ceci est un petit projet python, c'est un petit remix du célèbre jeu tétris, il y ajoute des fonctionnalités, comme le mode coopération.
+C'est un remix du célèbre jeu tétris, il y ajoute des fonctionnalités, comme le mode coopération ou 1v1(pas encore disponible).
 Il utilise la librairie pygame et il est conseillé de le lancer avec python3.
-Si vous voulez lancer directement avec python, il ne faut télécharger que le fichier 'jeu.py'.
-On peut aussi y jouer sur windows en téléchargant le fichier 'jeu.zip', en le dézippant et en lancant l'éxécutable qui se trouve dans le dossier extrait.
+Si vous voulez lancer avec python, il ne faut télécharger que le fichier 'jeu.py'.
+On peut aussi y jouer directement sur windows en téléchargant le fichier 'jeu.zip', en le dézippant et en lancant l'éxécutable qui se trouve dans le dossier extrait.
+Le fichier 'jeu.zip' a été compilé avec pyinstaller. Attention, le fichier 'jeu.zip' n'est pas mis à jour à chaque commit.
 
 Description :
 -------------
