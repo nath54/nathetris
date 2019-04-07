@@ -82,6 +82,6 @@ __Les touches du joueur 2 sont :__
 
 
 
-Si il y a des problèmes, vous pouvez créer une nouvelle issue, ou bien me contacter par mail : cerisara.nathan@gmail.com
+Si vous rencontrez des problèmes, vous pouvez créer une nouvelle issue, ou bien me contacter par mail : cerisara.nathan@gmail.com
 
 
