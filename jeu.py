@@ -10,10 +10,15 @@ def inp(txt):
     if vp[0]==2: return raw_input(txt)
     else: return input(txt)
 
+mtexb,mteyb=1280,1024
 
 pygame.init()
 io = pygame.display.Info()
-print(io.current_w,io.current_h)
+
+mtex,mtey=io.current_w,io.current_h
+ntex,ntey=int(tex/mtexb*mtex),int(tey/mteyb*mtey)
+tex,tey=ntex,ntey
+
 fenetre=pygame.display.set_mode([tex,tey])
 pygame.display.set_caption("NATHETRIS")
 #pygame.key.set_repeat(40,30)
@@ -48,6 +53,27 @@ figs=[ [ [[0,1],[1,1],[2,1],[3,1]] , [[2,0],[2,1],[2,2],[2,3]] ],
        [ [[2,1],[2,2],[2,3]] , [[1,2],[2,2],[3,2]] ],
        [ [[2,0],[2,1]] , [[0,2],[1,2]] ]
 ]
+
+iaf=False
+
+def rtpfia(key,cenc,cubes):
+    nf="data_player_keys_tetris_for_ia.nath"
+    cac="|"
+    cacc="#"
+    ccac="_"
+    cccc="-"
+    if not nf in os.listdir("./"): txt=""
+    else: txt=cac
+    txt+=str(key)+cacc
+    for c in cenc.cubes: txt+=str(c.px)+cccc+str(c.py)+ccac
+    txt=txt[:-1]+cacc
+    for c in cubes: txt+=str(c.px)+cccc+str(c.py)+ccac
+    txt=txt[:-1]
+    f=open(nf,"a")
+    f.write(txt)
+    f.close()
+
+
 
 clfs=[]
 for f in figs: clfs.append(rcl())
@@ -272,14 +298,19 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
                 #player1
                 elif event.key==keys[0]:
                     cubeencours[0].bouger("bas",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(0,cubeencours[0],cubes)
                 elif event.key==keys[1]:
                     cubeencours[0].bouger("gauche",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(1,cubeencours[0],cubes)
                 elif event.key==keys[2]:
                     cubeencours[0].bouger("droite",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(2,cubeencours[0],cubes)
                 elif event.key==keys[3]:
                     cubeencours[0].bouger("rot gauche",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(3,cubeencours[0],cubes)
                 elif event.key==keys[4]:
                     cubeencours[0].bouger("rot droite",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(4,cubeencours[0],cubes)
                 #player2
                 if nbj==2 and bot==0:
                     if event.key==keys2[0]:
