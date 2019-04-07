@@ -1,10 +1,19 @@
 #coding:utf-8
-import random,time,pygame,numpy
+import random,time,pygame,numpy,os
 from pygame.locals import *
 
-tex,tey=550,750
+tex,tey=700,900
+
+def inp(txt):
+    import sys
+    vp=sys.version_info
+    if vp[0]==2: return raw_input(txt)
+    else: return input(txt)
+
 
 pygame.init()
+io = pygame.display.Info()
+print(io.current_w,io.current_h)
 fenetre=pygame.display.set_mode([tex,tey])
 pygame.display.set_caption("NATHETRIS")
 #pygame.key.set_repeat(40,30)
@@ -226,8 +235,18 @@ def aff(cbs,cencs,dta,taf,points,mode,tps,tx,ty):
         fenetre.blit( font.render("tps : "+str(int(tps))+" sec",20,(250,250,250)) , [rx(300),ry(750)] )
         pygame.display.update()
     return dta
-    
-def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj):
+
+def bbot(cbenc,cubes,tx,ty,ceec,dtc,tac):
+    if time.time()-dtc >= tac:
+        a=random.randint(1,4)
+        if a==0: cbenc.bouger("bas",cubes,tx,ty,ceec)
+        elif a==1: cbenc.bouger("gauche",cubes,tx,ty,ceec)
+        elif a==2: cbenc.bouger("droite",cubes,tx,ty,ceec)
+        elif a==3: cbenc.bouger("rot gauche",cubes,tx,ty,ceec)
+        elif a==4: cbenc.bouger("rot droite",cubes,tx,ty,ceec)
+
+
+def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
     keys=[K_DOWN,K_LEFT,K_RIGHT,K_UP,K_b,K_v]
     keys2=[K_k,K_j,K_l,K_i,K_u,K_o]
     cubes=[]
@@ -242,6 +261,8 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj):
         tt=time.time()
         cubes,cubeencours,dtc,perdu,points,tac=ccc(cubes,cubeencours,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl)
         dta=aff(cubes,cubeencours,dta,taf,points,mode,tps,tx,ty)
+        if bot==1:
+            bbot(cubeencours[1],cubes,tx,ty,cubeencours[0],dtc,tac)
         for event in pygame.event.get():
             if event.type==QUIT: encourg=False
             elif event.type==KEYDOWN:
@@ -260,7 +281,7 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj):
                 elif event.key==keys[4]:
                     cubeencours[0].bouger("rot droite",cubes,tx,ty,ceec)
                 #player2
-                if nbj==2:
+                if nbj==2 and bot==0:
                     if event.key==keys2[0]:
                         cubeencours[1].bouger("bas",cubes,tx,ty,cubeencours[0])
                     elif event.key==keys2[1]:
@@ -296,7 +317,7 @@ def boutton(x,y,tx,ty,cl):
     pygame.draw.rect(fenetre,(0,0,0),(rx(x),ry(y),rx(tx),ry(ty)),2)
     return b
 
-def affmenu(modecl,mode,tx,tac,dimtac):
+def affmenu(modecl,mode,tx,tac,dimtac,bot):
     bts=[]
     for x in range(20): bts.append(None)
     fenetre.fill(clf)
@@ -357,12 +378,15 @@ def affmenu(modecl,mode,tx,tac,dimtac):
     texte(">>>",305,365,15,(255,255,255))
     #
     if mode==0: clbs[15]=b
-    if mode==1: clbs[16]=b
+    elif mode==1 and bot==0: clbs[16]=b
+    elif mode==1 and bot==1: clbs[17]=b
     texte("mode jeu",420,200,20,(250,250,250))
     bts[16]=boutton(400,240,100,30,clbs[15])
     bts[17]=boutton(400,280,100,30,clbs[16])
+    bts[18]=boutton(400,320,100,30,clbs[17])
     texte("standar",405,245,15,(255,255,255))
     texte("cooperation",405,285,15,(255,255,255))
+    texte("cooperation with bot",405,325,15,(255,255,255))
     #
     if tx==10: clbs[12]=b
     elif tx==15: clbs[13]=b
@@ -384,9 +408,9 @@ clf=(50,16,80)
 
 def menu():
     taf=0.05
-    tac=0.5000
-    mintac=0.3
-    dimtac=0.001
+    tac=0.5
+    mintac=0.4
+    dimtac=0.0001
     tx,ty=15,20
     needtoaff=True
     encourmenu=True
@@ -394,10 +418,11 @@ def menu():
     mode=0
     modecl=0
     nbj=1
+    bot=0
     bts=[]
     while encourmenu:
         if needtoaff:
-            bts=affmenu(modecl,mode,tx,tac,dimtac)
+            bts=affmenu(modecl,mode,tx,tac,dimtac,bot)
             needtoaff=False
         for event in pygame.event.get():
             if event.type==QUIT: encourmenu=False
@@ -419,18 +444,19 @@ def menu():
                         elif di==6: tac,mintac=0.3,0.2
                         elif di==7: tac,mintac=0.2,0.1
                         elif di==8: dimtac=0
-                        elif di==9: dimtac=0.0001
-                        elif di==10: dimtac=0.001
-                        elif di==11: dimtac=0.01
+                        elif di==9: dimtac=0.00001
+                        elif di==10: dimtac=0.0001
+                        elif di==11: dimtac=0.001
                         elif di==12: tx,ty=10,18
                         elif di==13: tx,ty=15,20
                         elif di==14: tx,ty=20,25
                         elif di==15: exit()
                         elif di==16: mode,nbj=0,1
                         elif di==17: mode,nbj=1,2
+                        elif di==18: mode,nbj,bot=1,2,1
     if playgame :
         playgame=False
-        game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj)
+        game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot)
 
 #########
 
