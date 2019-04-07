@@ -56,12 +56,13 @@ figs=[ [ [[0,1],[1,1],[2,1],[3,1]] , [[2,0],[2,1],[2,2],[2,3]] ],
 
 iaf=False
 
+nf="data_player_keys_tetris_for_ia.nath"
+cac="|"
+cacc="#"
+ccac="_"
+cccc="-"
+
 def rtpfia(key,cenc,cubes):
-    nf="data_player_keys_tetris_for_ia.nath"
-    cac="|"
-    cacc="#"
-    ccac="_"
-    cccc="-"
     if not nf in os.listdir("./"): txt=""
     else: txt=cac
     txt+=str(key)+cacc
@@ -297,20 +298,20 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
                 if event.key==K_q: encourg=False
                 #player1
                 elif event.key==keys[0]:
-                    cubeencours[0].bouger("bas",cubes,tx,ty,ceec)
                     if iaf: rtpfia(0,cubeencours[0],cubes)
+                    cubeencours[0].bouger("bas",cubes,tx,ty,ceec)
                 elif event.key==keys[1]:
-                    cubeencours[0].bouger("gauche",cubes,tx,ty,ceec)
                     if iaf: rtpfia(1,cubeencours[0],cubes)
+                    cubeencours[0].bouger("gauche",cubes,tx,ty,ceec)
                 elif event.key==keys[2]:
-                    cubeencours[0].bouger("droite",cubes,tx,ty,ceec)
                     if iaf: rtpfia(2,cubeencours[0],cubes)
+                    cubeencours[0].bouger("droite",cubes,tx,ty,ceec)
                 elif event.key==keys[3]:
-                    cubeencours[0].bouger("rot gauche",cubes,tx,ty,ceec)
                     if iaf: rtpfia(3,cubeencours[0],cubes)
+                    cubeencours[0].bouger("rot gauche",cubes,tx,ty,ceec)
                 elif event.key==keys[4]:
-                    cubeencours[0].bouger("rot droite",cubes,tx,ty,ceec)
                     if iaf: rtpfia(4,cubeencours[0],cubes)
+                    cubeencours[0].bouger("rot droite",cubes,tx,ty,ceec)
                 #player2
                 if nbj==2 and bot==0:
                     if event.key==keys2[0]:
@@ -350,7 +351,7 @@ def boutton(x,y,tx,ty,cl):
 
 def affmenu(modecl,mode,tx,tac,dimtac,bot):
     bts=[]
-    for x in range(20): bts.append(None)
+    for x in range(21): bts.append(None)
     fenetre.fill(clf)
     texte("N",100,80,80,rcl())
     texte("A",150,80,80,rcl())
@@ -411,13 +412,19 @@ def affmenu(modecl,mode,tx,tac,dimtac,bot):
     if mode==0: clbs[15]=b
     elif mode==1 and bot==0: clbs[16]=b
     elif mode==1 and bot==1: clbs[17]=b
+    clbs[18]=(20,20,20)
+    clbs[19]=(20,20,20)
     texte("mode jeu",420,200,20,(250,250,250))
     bts[16]=boutton(400,240,100,30,clbs[15])
     bts[17]=boutton(400,280,100,30,clbs[16])
     bts[18]=boutton(400,320,100,30,clbs[17])
+    bts[19]=boutton(400,360,100,30,clbs[18])
+    bts[20]=boutton(400,400,100,30,clbs[19])
     texte("standar",405,245,15,(255,255,255))
     texte("cooperation",405,285,15,(255,255,255))
-    texte("cooperation with bot",405,325,15,(255,255,255))
+    texte("co-op bot",405,325,15,(255,255,255))
+    texte("co-op ia",405,365,15,(255,255,255))
+    texte("ia",405,405,15,(255,255,255))
     #
     if tx==10: clbs[12]=b
     elif tx==15: clbs[13]=b
@@ -483,7 +490,7 @@ def menu():
                         elif di==14: tx,ty=20,25
                         elif di==15: exit()
                         elif di==16: mode,nbj=0,1
-                        elif di==17: mode,nbj=1,2
+                        elif di==17: mode,nbj,bot=1,2,0
                         elif di==18: mode,nbj,bot=1,2,1
     if playgame :
         playgame=False
