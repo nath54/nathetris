@@ -345,7 +345,7 @@ def aff(cbss,cencs,dta,taf,pointss,mode,tps,tx,ty):
     return dta
 
 def bbot(cbenc,cubes,tx,ty,ceec,dtc,tac):
-    if time.time()-dtc >= tac:
+    if time.time()-dtc >= tac*0.7:
         a=random.randint(1,4)
         if a==0: cbenc.bouger("bas",cubes,tx,ty,ceec)
         elif a==1: cbenc.bouger("gauche",cubes,tx,ty,ceec)
@@ -353,6 +353,29 @@ def bbot(cbenc,cubes,tx,ty,ceec,dtc,tac):
         elif a==3: cbenc.bouger("rot gauche",cubes,tx,ty,ceec)
         elif a==4: cbenc.bouger("rot droite",cubes,tx,ty,ceec)
 
+
+def bia(cbenc,cubes,dtc,tac,model,ceec,tx,ty):
+    if time.time()-dtc >= tac*0.5:
+        x_fit=numpy.zeros([1,2,500,2])
+        s=0
+        for c in cbenc.cubes:
+            x_fit[0,0,s,0]=c.px/100.0
+            x_fit[0,0,s,1]=c.py/100.0
+            s+=1
+        s=0
+        for c in cubes:
+            x_fit[0,1,s,0]=c.px/100.0
+            x_fit[0,1,s,1]=c.py/100.0
+            s+=1
+        t=model.predict(x_fit)
+        n=t[0,0]*100
+        a=int(n)
+        print(t,n,a)
+        if a==0: cbenc.bouger("bas",cubes,tx,ty,ceec)
+        elif a==1: cbenc.bouger("gauche",cubes,tx,ty,ceec)
+        elif a==2: cbenc.bouger("droite",cubes,tx,ty,ceec)
+        elif a==3: cbenc.bouger("rot gauche",cubes,tx,ty,ceec)
+        elif a==4: cbenc.bouger("rot droite",cubes,tx,ty,ceec)
 
 def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
     keys=[K_DOWN,K_LEFT,K_RIGHT,K_UP,K_b,K_v]
@@ -365,12 +388,25 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
     perdus=[False,False]
     pointss=[0,0]
     tps=0
+    if bot==2:
+        import json,keras
+        from keras.models import model_from_json
+        json_file = open('model.json', 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        model = model_from_json(loaded_model_json)
+        model.load_weights("model.h5py")
+        model.compile(loss='mean_squared_error',optimizer='sgd',metrics=[])
     while encourg:
         tt=time.time()
         cubess,cubeencours,dtc,perdus,pointss,tac=ccc(cubess,cubeencours,dtc,tac,pointss,mode,tx,ty,mintac,dimtac,modecl)
         dta=aff(cubess,cubeencours,dta,taf,pointss,mode,tps,tx,ty)
         if bot==1:
             bbot(cubeencours[1],cubess[1],tx,ty,cubeencours[0],dtc,tac)
+        elif bot==2 and nbj==2:
+            bia(cubeencours[1],cubess[1],dtc,tac,model,cubeencours[0],tx,ty)
+        elif bot==2 and nbj==1:
+            bia(cubeencours[0],cubess[0],dtc,tac,model,None,tx,ty)
         for event in pygame.event.get():
             if event.type==QUIT: encourg=False
             elif event.type==KEYDOWN:
@@ -381,33 +417,36 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
                 else: ceec=None
                 if event.key==K_q: encourg=False
                 #player1
-                elif event.key==keys[0]:
-                    if iaf: rtpfia(0,cubeencours[0],cubess[0])
-                    cubeencours[0].bouger("bas",cubess[0],tx,ty,ceec)
-                elif event.key==keys[1]:
-                    if iaf: rtpfia(1,cubeencours[0],cubess[0])
-                    cubeencours[0].bouger("gauche",cubess[0],tx,ty,ceec)
-                elif event.key==keys[2]:
-                    if iaf: rtpfia(2,cubeencours[0],cubess[0])
-                    cubeencours[0].bouger("droite",cubess[0],tx,ty,ceec)
-                elif event.key==keys[3]:
-                    if iaf: rtpfia(3,cubeencours[0],cubess[0])
-                    cubeencours[0].bouger("rot gauche",cubess[0],tx,ty,ceec)
-                elif event.key==keys[4]:
-                    if iaf: rtpfia(4,cubeencours[0],cubess[0])
-                    cubeencours[0].bouger("rot droite",cubess[0],tx,ty,ceec)
+                if (nbj==1 and bot!=2) or (nbj==2 and bot!=2):
+                    if event.key==keys[0]:
+                        if iaf: rtpfia(0,cubeencours[0],cubess[0])
+                        cubeencours[0].bouger("bas",cubess[0],tx,ty,ceec)
+                    elif event.key==keys[1]:
+                        if iaf: rtpfia(1,cubeencours[0],cubess[0])
+                        cubeencours[0].bouger("gauche",cubess[0],tx,ty,ceec)
+                    elif event.key==keys[2]:
+                        if iaf: rtpfia(2,cubeencours[0],cubess[0])
+                        cubeencours[0].bouger("droite",cubess[0],tx,ty,ceec)
+                    elif event.key==keys[3]:
+                        if iaf: rtpfia(3,cubeencours[0],cubess[0])
+                        cubeencours[0].bouger("rot gauche",cubess[0],tx,ty,ceec)
+                    elif event.key==keys[4]:
+                        if iaf: rtpfia(4,cubeencours[0],cubess[0])
+                        cubeencours[0].bouger("rot droite",cubess[0],tx,ty,ceec)
                 #player2
                 if nbj==2 and bot==0:
+                    if mode==4: cbs=cubess[1]
+                    else: cbs=cubess[0]
                     if event.key==keys2[0]:
-                        cubeencours[1].bouger("bas",cubess[1],tx,ty,ceec2)
+                        cubeencours[1].bouger("bas",cbs,tx,ty,ceec2)
                     elif event.key==keys2[1]:
-                        cubeencours[1].bouger("gauche",cubess[1],tx,ty,ceec2)
+                        cubeencours[1].bouger("gauche",cbs,tx,ty,ceec2)
                     elif event.key==keys2[2]:
-                        cubeencours[1].bouger("droite",cubess[1],tx,ty,ceec2)
+                        cubeencours[1].bouger("droite",cbs,tx,ty,ceec2)
                     elif event.key==keys2[3]:
-                        cubeencours[1].bouger("rot gauche",cubess[1],tx,ty,ceec2)
+                        cubeencours[1].bouger("rot gauche",cbs,tx,ty,ceec2)
                     elif event.key==keys2[4]:
-                        cubeencours[1].bouger("rot droite",cubess[1],tx,ty,ceec2)
+                        cubeencours[1].bouger("rot droite",cbs,tx,ty,ceec2)
         if perdus[0]:
             encourg=False
             break
@@ -505,9 +544,11 @@ def affmenu(modecl,mode,tx,tac,dimtac,bot):
     #
     clbs[18]=(20,20,20)
     clbs[19]=(20,20,20)
-    if mode==0: clbs[15]=b
+    if mode==0 and bot==0: clbs[15]=b
     elif mode==1 and bot==0: clbs[16]=b
     elif mode==1 and bot==1: clbs[17]=b
+    elif mode==1 and bot==2: clbs[18]=b
+    elif mode==0 and bot==2: clbs[19]=b
     elif mode==4 and bot==0: clbs[21]=b
     elif mode==4 and bot==1: clbs[22]=b
     texte("mode jeu",420,200,20,(250,250,250))
@@ -595,9 +636,11 @@ def menu():
                         elif di==13: tx,ty=15,20
                         elif di==14: tx,ty=20,25
                         elif di==15: exit()
-                        elif di==16: mode,nbj=0,1
+                        elif di==16: mode,nbj,bot=0,1,0
                         elif di==17: mode,nbj,bot=1,2,0
                         elif di==18: mode,nbj,bot=1,2,1
+                        #elif di==19: mode,nbj,bot=1,2,2
+                        #elif di==20: mode,nbj,bot=0,1,2
                         elif di==21: modecl=3
                         elif di==22: mode,nbj,bot=4,2,0
                         elif di==23: mode,nbj,bot=4,2,1
