@@ -21,15 +21,17 @@ Dans ce jeu, il y a différents modes de jeux, il y a :
     
     -le mode coopération avec un bot ( le joueur joue avec un bot qui fait tomber des blocs aléatoirement )
     
+    -le mode 1v1 ( deux joueurs jouent l'un contre l'autre )
+    
+    -le mode 1v1 IA ( le joueur joue contre une IA )
+
+
 Des nouveaux modes vont bientôt être ajoutés :
 
     -le mode coopération avec une IA ( le joueur joue avec une IA , qui est différente du simple bot )
     
     -le mode IA ( une IA joue toute seule )
     
-    -le mode 1v1 ( deux joueurs jouent l'un contre l'autre )
-    
-    -le mode 1v1 IA ( le joueur joue contre une IA )
 
 IL y a aussi plusieurs modes de couleurs :
 

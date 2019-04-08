@@ -172,7 +172,7 @@ def newcenc(tx,ty,modcl,acenc,acl):
     elif modcl == 3:
         #r=random.randint(0,2)
         acl=list(acl)
-        j=7
+        j=15
         acl[0]+=random.randint(-j,j)
         acl[1]+=random.randint(-j,j)
         acl[2]+=random.randint(-j,j)
@@ -219,59 +219,128 @@ def detect_perdu(cubes,tx,ty):
             break
     return perdu
 
-def ccc(cbs,cencs,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl):
-    perdu=False
+def ccc(cbss,cencs,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl):
+    perdus=[False,False]
     if time.time()-dtc >= tac:
         dtc=time.time()
         if tac > mintac: tac-=dimtac
-        j=numpy.zeros([tx,ty])
-        for c in cbs:
-            j[c.px,c.py]=1
-        tfs=[False,False]
-        for cenc in cencs:
-            for c in cenc.cubes:
-                if c.py+1==ty or j[c.px,c.py+1]==1:
-                    tfs[cencs.index(cenc)]=True
-        for cenc in cencs:
-            tf=tfs[cencs.index(cenc)]
+        if mode == 4:
+            #création quadrillages
+            j1=numpy.zeros([tx,ty])
+            for c in cbss[0]:
+                j1[c.px,c.py]=1
+            j2=numpy.zeros([tx,ty])
+            for c in cbss[1]:
+                j2[c.px,c.py]=1
+            #vérification touche ou pas
+            tfs=[False,False]
+            for c in cencs[0].cubes:
+                if c.py+1==ty or j1[c.px,c.py+1]==1: tfs[0]=True
+            for c in cencs[1].cubes:
+                if c.py+1==ty or j2[c.px,c.py+1]==1: tfs[1]=True
+            #player 1
+            tf=tfs[0]
             if not tf:
-                for c in cenc.cubes:
+                for c in cencs[0].cubes:
                     c.py+=1
-                cenc.py+=1
+                cencs[0].py+=1
             else:
-                for c in cenc.cubes:
-                    cbs.append(c)
+                for c in cencs[0].cubes:
+                    cbss[0].append(c)
                     acl=c.cl
-                cbs,points=detect_rang(cbs,points,tx,ty)
-                perdu=detect_perdu(cbs,tx,ty)
-                if len(cencs)==2:
-                    if cencs.index(cenc)==0: ceec=cencs[1]
-                    else: ceec=cencs[0]
-                else: ceec=None
-                cencs[cencs.index(cenc)]=newcenc(tx,ty,modecl,ceec,acl)
-    return cbs,cencs,dtc,perdu,points,tac
+                cbss[0],points[0]=detect_rang(cbss[0],points[0],tx,ty)
+                perdus[0]=detect_perdu(cbss[0],tx,ty)
+                cencs[0]=newcenc(tx,ty,modecl,cencs[1],acl)
+            #player 2
+            tf=tfs[1]
+            if not tf:
+                for c in cencs[1].cubes:
+                    c.py+=1
+                cencs[1].py+=1
+            else:
+                for c in cencs[1].cubes:
+                    cbss[1].append(c)
+                    acl=c.cl
+                cbss[1],points[1]=detect_rang(cbss[1],points[1],tx,ty)
+                perdus[1]=detect_perdu(cbss[1],tx,ty)
+                cencs[1]=newcenc(tx,ty,modecl,cencs[0],acl)
+        else:
+            j=numpy.zeros([tx,ty])
+            for c in cbss[0]:
+                j[c.px,c.py]=1
+            tfs=[False,False]
+            for cenc in cencs:
+                for c in cenc.cubes:
+                    if c.py+1==ty or j[c.px,c.py+1]==1:
+                        tfs[cencs.index(cenc)]=True
+            for cenc in cencs:
+                tf=tfs[cencs.index(cenc)]
+                if not tf:
+                    for c in cenc.cubes:
+                        c.py+=1
+                    cenc.py+=1
+                else:
+                    for c in cenc.cubes:
+                        cbss[0].append(c)
+                        acl=c.cl
+                    cbss[0],points[0]=detect_rang(cbss[0],points[0],tx,ty)
+                    perdus[0]=detect_perdu(cbss[0],tx,ty)
+                    if len(cencs)==2:
+                        if cencs.index(cenc)==0: ceec=cencs[1]
+                        else: ceec=cencs[0]
+                    else: ceec=None
+                    cencs[cencs.index(cenc)]=newcenc(tx,ty,modecl,ceec,acl)
+    return cbss,cencs,dtc,perdus,points,tac
 
 
-def aff(cbs,cencs,dta,taf,points,mode,tps,tx,ty):
+def aff(cbss,cencs,dta,taf,pointss,mode,tps,tx,ty):
     if time.time()-dta >= taf:
         dta=time.time()
         fenetre.fill((30,30,30))
-        #quadrillage
-        pdx,pdy=rx(100),ry(100)
-        tc=rx(25)
-        pygame.draw.rect(fenetre,(10,10,10),(pdx,pdy,(tx*tc),(ty*tc)),0)
-        cll=(150,150,150)
-        for x in range(tx+1): pygame.draw.line(fenetre,cll,(pdx+(x*tc),pdy),(pdx+(x*tc),pdy+(ty*tc)),1)
-        for y in range(ty+1):
-            if y==4: cll=(250,0,0)
-            else: cll=(150,150,150)
-            pygame.draw.line(fenetre,cll,(pdx,pdy+(y*tc)),(pdx+(tx*tc),pdy+(y*tc)),1)
-        #cubes
-        for cenc in cencs:
-            for c in cbs+cenc.cubes: pygame.draw.rect(fenetre,c.cl,(pdx+(c.px*tc),pdy+(c.py*tc),tc,tc),0)
-        #points
-        fenetre.blit( font.render("score : "+str(points),20,(250,250,250)) , [rx(300),ry(700)] )
-        fenetre.blit( font.render("tps : "+str(int(tps))+" sec",20,(250,250,250)) , [rx(300),ry(750)] )
+        if mode==4:
+            #quad1
+            pdx1,pdy1=rx(25),ry(100)
+            tc=rx(20)
+            pygame.draw.rect(fenetre,(10,10,10),(pdx1,pdy1,(tx*tc),(ty*tc)),0)
+            cll=(150,150,150)
+            for x in range(tx+1): pygame.draw.line(fenetre,cll,(pdx1+(x*tc),pdy1),(pdx1+(x*tc),pdy1+(ty*tc)),1)
+            for y in range(ty+1):
+                if y==4: cll=(250,0,0)
+                else: cll=(150,150,150)
+                pygame.draw.line(fenetre,cll,(pdx1,pdy1+(y*tc)),(pdx1+(tx*tc),pdy1+(y*tc)),1)
+            #quad2
+            pdx2,pdy2=rx(350),ry(100)
+            tc=rx(20)
+            pygame.draw.rect(fenetre,(10,10,10),(pdx2,pdy2,(tx*tc),(ty*tc)),0)
+            cll=(150,150,150)
+            for x in range(tx+1): pygame.draw.line(fenetre,cll,(pdx2+(x*tc),pdy2),(pdx2+(x*tc),pdy2+(ty*tc)),1)
+            for y in range(ty+1):
+                if y==4: cll=(250,0,0)
+                else: cll=(150,150,150)
+                pygame.draw.line(fenetre,cll,(pdx2,pdy2+(y*tc)),(pdx2+(tx*tc),pdy2+(y*tc)),1)
+            #player1
+            for c in cbss[0]+cencs[0].cubes: pygame.draw.rect(fenetre,c.cl,(pdx1+(c.px*tc),pdy1+(c.py*tc),tc,tc),0)
+            #player2
+            for c in cbss[1]+cencs[1].cubes: pygame.draw.rect(fenetre,c.cl,(pdx2+(c.px*tc),pdy2+(c.py*tc),tc,tc),0)
+            fenetre.blit( font.render("score1 : "+str(pointss[0]),20,(250,250,250)) , [rx(100),ry(700)] )
+            fenetre.blit( font.render("score2 : "+str(pointss[1]),20,(250,250,250)) , [rx(500),ry(700)] )
+        else:
+            #quadrillage
+            pdx,pdy=rx(100),ry(100)
+            tc=rx(25)
+            pygame.draw.rect(fenetre,(10,10,10),(pdx,pdy,(tx*tc),(ty*tc)),0)
+            cll=(150,150,150)
+            for x in range(tx+1): pygame.draw.line(fenetre,cll,(pdx+(x*tc),pdy),(pdx+(x*tc),pdy+(ty*tc)),1)
+            for y in range(ty+1):
+                if y==4: cll=(250,0,0)
+                else: cll=(150,150,150)
+                pygame.draw.line(fenetre,cll,(pdx,pdy+(y*tc)),(pdx+(tx*tc),pdy+(y*tc)),1)
+            #cubes
+            for cenc in cencs:
+                for c in cbss[0]+cenc.cubes: pygame.draw.rect(fenetre,c.cl,(pdx+(c.px*tc),pdy+(c.py*tc),tc,tc),0)
+            #points
+            fenetre.blit( font.render("score : "+str(pointss[0]),20,(250,250,250)) , [rx(300),ry(700)] )
+        fenetre.blit( font.render("tps : "+str(int(tps))+" sec",20,(250,250,250)) , [rx(350),ry(750)] )
         pygame.display.update()
     return dta
 
@@ -288,68 +357,78 @@ def bbot(cbenc,cubes,tx,ty,ceec,dtc,tac):
 def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
     keys=[K_DOWN,K_LEFT,K_RIGHT,K_UP,K_b,K_v]
     keys2=[K_k,K_j,K_l,K_i,K_u,K_o]
-    cubes=[]
+    cubess=[[],[]]
     cubeencours=[]
     cubeencours.append( newcenc(tx,ty,modecl,None,rcl()) )
-    if nbj==2: cubeencours.append( newcenc(tx,ty,modecl,cubeencours[0]) ) 
+    if nbj==2: cubeencours.append( newcenc(tx,ty,modecl,cubeencours[0],rcl()) ) 
     encourg=True
-    perdu=False
-    points=0
+    perdus=[False,False]
+    pointss=[0,0]
     tps=0
     while encourg:
         tt=time.time()
-        cubes,cubeencours,dtc,perdu,points,tac=ccc(cubes,cubeencours,dtc,tac,points,mode,tx,ty,mintac,dimtac,modecl)
-        dta=aff(cubes,cubeencours,dta,taf,points,mode,tps,tx,ty)
+        cubess,cubeencours,dtc,perdus,pointss,tac=ccc(cubess,cubeencours,dtc,tac,pointss,mode,tx,ty,mintac,dimtac,modecl)
+        dta=aff(cubess,cubeencours,dta,taf,pointss,mode,tps,tx,ty)
         if bot==1:
-            bbot(cubeencours[1],cubes,tx,ty,cubeencours[0],dtc,tac)
+            bbot(cubeencours[1],cubess[1],tx,ty,cubeencours[0],dtc,tac)
         for event in pygame.event.get():
             if event.type==QUIT: encourg=False
             elif event.type==KEYDOWN:
-                if nbj==2: ceec=cubeencours[1]
+                ceec2=None
+                if nbj==2:
+                    if mode==4: ceec,ceec2=None,None
+                    else: ceec,ceec2=cubeencours[1],cubeencours[0]
                 else: ceec=None
                 if event.key==K_q: encourg=False
                 #player1
                 elif event.key==keys[0]:
-                    if iaf: rtpfia(0,cubeencours[0],cubes)
-                    cubeencours[0].bouger("bas",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(0,cubeencours[0],cubess[0])
+                    cubeencours[0].bouger("bas",cubess[0],tx,ty,ceec)
                 elif event.key==keys[1]:
-                    if iaf: rtpfia(1,cubeencours[0],cubes)
-                    cubeencours[0].bouger("gauche",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(1,cubeencours[0],cubess[0])
+                    cubeencours[0].bouger("gauche",cubess[0],tx,ty,ceec)
                 elif event.key==keys[2]:
-                    if iaf: rtpfia(2,cubeencours[0],cubes)
-                    cubeencours[0].bouger("droite",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(2,cubeencours[0],cubess[0])
+                    cubeencours[0].bouger("droite",cubess[0],tx,ty,ceec)
                 elif event.key==keys[3]:
-                    if iaf: rtpfia(3,cubeencours[0],cubes)
-                    cubeencours[0].bouger("rot gauche",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(3,cubeencours[0],cubess[0])
+                    cubeencours[0].bouger("rot gauche",cubess[0],tx,ty,ceec)
                 elif event.key==keys[4]:
-                    if iaf: rtpfia(4,cubeencours[0],cubes)
-                    cubeencours[0].bouger("rot droite",cubes,tx,ty,ceec)
+                    if iaf: rtpfia(4,cubeencours[0],cubess[0])
+                    cubeencours[0].bouger("rot droite",cubess[0],tx,ty,ceec)
                 #player2
                 if nbj==2 and bot==0:
                     if event.key==keys2[0]:
-                        cubeencours[1].bouger("bas",cubes,tx,ty,cubeencours[0])
+                        cubeencours[1].bouger("bas",cubess[1],tx,ty,ceec2)
                     elif event.key==keys2[1]:
-                        cubeencours[1].bouger("gauche",cubes,tx,ty,cubeencours[0])
+                        cubeencours[1].bouger("gauche",cubess[1],tx,ty,ceec2)
                     elif event.key==keys2[2]:
-                        cubeencours[1].bouger("droite",cubes,tx,ty,cubeencours[0])
+                        cubeencours[1].bouger("droite",cubess[1],tx,ty,ceec2)
                     elif event.key==keys2[3]:
-                        cubeencours[1].bouger("rot gauche",cubes,tx,ty,cubeencours[0])
+                        cubeencours[1].bouger("rot gauche",cubess[1],tx,ty,ceec2)
                     elif event.key==keys2[4]:
-                        cubeencours[1].bouger("rot droite",cubes,tx,ty,cubeencours[0])
-        if perdu:
+                        cubeencours[1].bouger("rot droite",cubess[1],tx,ty,ceec2)
+        if perdus[0]:
+            encourg=False
+            break
+        if perdus[1]:
             encourg=False
             break
         tps+=time.time()-tt
-    if perdu:
-        fenetre.blit( font.render("Vous avez perdu",20,(255,255,255)),[rx(150),ry(20)])
-        fenetre.blit( font.render("Veuillez appuyer sur SPACE pour retourner au menu",20,(255,255,255)),[rx(150),ry(60)])
+    if perdus[0]:
+        fenetre.blit( font.render("player1 a perdu",20,(255,255,255)),[rx(150),ry(20)])
+        fenetre.blit( font.render("Veuillez appuyer sur SPACE pour retourner au menu",20,(255,255,255)),[rx(150),ry(80)])
         pygame.display.update()
-    while perdu: 
+    if perdus[1]:
+        fenetre.blit( font.render("player2 a perdu",20,(255,255,255)),[rx(150),ry(40)])
+        fenetre.blit( font.render("Veuillez appuyer sur SPACE pour retourner au menu",20,(255,255,255)),[rx(150),ry(80)])
+        pygame.display.update()
+    while perdus[0] or perdus[1]: 
         for event in pygame.event.get():
-            if event.type==QUIT: perdu=False
+            if event.type==QUIT: perdus=[False,False]
             elif event.type==KEYDOWN:
-                if event.key==K_q: perdu=False
-                elif event.key==K_SPACE: perdu=False
+                if event.key==K_q: perdus=[False,False]
+                elif event.key==K_SPACE: perdus=[False,False]
     menu()
 
 ########menu
@@ -363,7 +442,7 @@ def boutton(x,y,tx,ty,cl):
 
 def affmenu(modecl,mode,tx,tac,dimtac,bot):
     bts=[]
-    for x in range(23): bts.append(None)
+    for x in range(25): bts.append(None)
     fenetre.fill(clf)
     texte("N",100,80,80,rcl())
     texte("A",150,80,80,rcl())
@@ -377,7 +456,7 @@ def affmenu(modecl,mode,tx,tac,dimtac,bot):
     a=(50,50,50)
     b=(50,250,50)
     clbs=[]
-    for x in range(23): clbs.append(a)
+    for x in range(25): clbs.append(a)
     #
     bts[0]=boutton(200,550,200,100,(150,150,0))
     texte("jouer",240,570,30,(150,0,0))
@@ -396,58 +475,64 @@ def affmenu(modecl,mode,tx,tac,dimtac,bot):
     texte("noir et blanc",25,325,15,(255,255,255))
     texte("dégradé",25,365,15,(255,255,255))
     #
-    if tac==0.5: clbs[4]=b
-    elif tac==0.4: clbs[5]=b
-    elif tac==0.3: clbs[6]=b
-    elif tac==0.2: clbs[7]=b
+    if tac==0.5: clbs[3]=b
+    elif tac==0.4: clbs[4]=b
+    elif tac==0.3: clbs[5]=b
+    elif tac==0.2: clbs[6]=b
     texte("difficulté",150,200,20,(250,250,250))
-    bts[4]=boutton(150,240,100,30,clbs[4])
-    bts[5]=boutton(150,280,100,30,clbs[5])
-    bts[6]=boutton(150,320,100,30,clbs[6])
-    bts[7]=boutton(150,360,100,30,clbs[7])
+    bts[4]=boutton(150,240,100,30,clbs[3])
+    bts[5]=boutton(150,280,100,30,clbs[4])
+    bts[6]=boutton(150,320,100,30,clbs[5])
+    bts[7]=boutton(150,360,100,30,clbs[6])
     texte("facile",155,245,15,(255,255,255))
     texte("moyen",155,285,15,(255,255,255))
     texte("difficile",155,325,15,(255,255,255))
     texte("hardcore",155,365,15,(255,255,255))
     #
-    if dimtac==0: clbs[8]=b
+    if dimtac==0: clbs[7]=b
+    elif dimtac==0.00001: clbs[8]=b
     elif dimtac==0.0001: clbs[9]=b
     elif dimtac==0.001: clbs[10]=b
-    elif dimtac==0.01: clbs[11]=b
     texte("accélération",280,200,20,(250,250,250))
-    bts[8]=boutton(280,240,100,30,clbs[8])
-    bts[9]=boutton(280,280,100,30,clbs[9])
-    bts[10]=boutton(280,320,100,30,clbs[10])
-    bts[11]=boutton(280,360,100,30,clbs[11])
+    bts[8]=boutton(280,240,100,30,clbs[7])
+    bts[9]=boutton(280,280,100,30,clbs[8])
+    bts[10]=boutton(280,320,100,30,clbs[9])
+    bts[11]=boutton(280,360,100,30,clbs[10])
     texte("-",305,245,15,(255,255,255))
     texte(">",305,285,15,(255,255,255))
     texte(">>",305,325,15,(255,255,255))
     texte(">>>",305,365,15,(255,255,255))
     #
+    clbs[18]=(20,20,20)
+    clbs[19]=(20,20,20)
     if mode==0: clbs[15]=b
     elif mode==1 and bot==0: clbs[16]=b
     elif mode==1 and bot==1: clbs[17]=b
-    clbs[18]=(20,20,20)
-    clbs[19]=(20,20,20)
+    elif mode==4 and bot==0: clbs[21]=b
+    elif mode==4 and bot==1: clbs[22]=b
     texte("mode jeu",420,200,20,(250,250,250))
     bts[16]=boutton(400,240,100,30,clbs[15])
     bts[17]=boutton(400,280,100,30,clbs[16])
     bts[18]=boutton(400,320,100,30,clbs[17])
     bts[19]=boutton(400,360,100,30,clbs[18])
     bts[20]=boutton(400,400,100,30,clbs[19])
+    bts[22]=boutton(400,440,100,30,clbs[21])
+    bts[23]=boutton(400,480,100,30,clbs[22])
     texte("standar",405,245,15,(255,255,255))
     texte("cooperation",405,285,15,(255,255,255))
     texte("co-op bot",405,325,15,(255,255,255))
     texte("co-op ia",405,365,15,(255,255,255))
     texte("ia",405,405,15,(255,255,255))
+    texte("1v1",405,445,15,(255,255,255))
+    texte("1v1 bot",405,485,15,(255,255,255))
     #
-    if tx==10: clbs[12]=b
-    elif tx==15: clbs[13]=b
-    elif tx==20: clbs[14]=b
+    if tx==10: clbs[11]=b
+    elif tx==15: clbs[12]=b
+    elif tx==20: clbs[13]=b
     texte("taille plateau",520,200,20,(250,250,250))
-    bts[12]=boutton(520,240,100,30,clbs[12])
-    bts[13]=boutton(520,280,100,30,clbs[13])
-    bts[14]=boutton(520,320,100,30,clbs[14])
+    bts[12]=boutton(520,240,100,30,clbs[11])
+    bts[13]=boutton(520,280,100,30,clbs[12])
+    bts[14]=boutton(520,320,100,30,clbs[13])
     texte("10*18",525,245,15,(255,255,255))
     texte("15*20",525,285,15,(255,255,255))
     texte("20*25",525,325,15,(255,255,255))
@@ -488,7 +573,13 @@ def menu():
                 for b in bts:
                     if b!=None and rpos.colliderect(b):
                         di=bts.index(b)
-                        if di==0: encourmenu,playgame=False,True
+                        if di==0:
+                            if not (mode==4 and tx==20 and ty==25 ):
+                                encourmenu,playgame=False,True
+                            else:
+                                fenetre.blit(font.render("Vous ne pouvez pas jouer en 1v1 sur grand plateau",20,(255,0,0)),[rx(50),ry(530)])
+                                pygame.display.update()
+                                time.sleep(0.9)
                         elif di==1: modecl=0
                         elif di==2: modecl=1
                         elif di==3: modecl=2
@@ -508,9 +599,12 @@ def menu():
                         elif di==17: mode,nbj,bot=1,2,0
                         elif di==18: mode,nbj,bot=1,2,1
                         elif di==21: modecl=3
-    if playgame :
+                        elif di==22: mode,nbj,bot=4,2,0
+                        elif di==23: mode,nbj,bot=4,2,1
+    if playgame:
         playgame=False
         game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot)
+        
 
 #########
 
