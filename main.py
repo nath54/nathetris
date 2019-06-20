@@ -54,9 +54,9 @@ figs=[ [ [[0,1],[1,1],[2,1],[3,1]] , [[2,0],[2,1],[2,2],[2,3]] ],
        [ [[2,0],[2,1]] , [[0,2],[1,2]] ]
 ]
 
-iaf=False
+iaf=True
 
-nf="data_player_keys_tetris_for_ia.nath"
+nf="../../dev_cuda/data_player_keys_tetris_for_ia.nath"
 cac="|"
 cacc="#"
 ccac="_"
@@ -354,7 +354,7 @@ def bbot(cbenc,cubes,tx,ty,ceec,dtc,tac):
         elif a==4: cbenc.bouger("rot droite",cubes,tx,ty,ceec)
 
 
-def bia(cbenc,cubes,dtc,tac,model,ceec,tx,ty):
+def bia(cbenc,cubes,dtc,tac,model,ceec,tx,ty,torch):
     if time.time()-dtc >= tac*0.5:
         x_fit=numpy.zeros([1,2,500,2])
         s=0
@@ -367,10 +367,18 @@ def bia(cbenc,cubes,dtc,tac,model,ceec,tx,ty):
             x_fit[0,1,s,0]=c.px/100.0
             x_fit[0,1,s,1]=c.py/100.0
             s+=1
-        t=model.predict(x_fit)
-        n=t[0,0]*100
-        a=int(n)
-        print(t,n,a)
+        x_fit=torch.Tensor(x_fit).cuda()
+        hy=model(x_fit)
+        t=torch.mean(hy)*100
+        """
+        lpp=0
+        for i in range(5):
+            if t[0,i]>t[0,lpp]: lpp=i
+        a=int(lpp)
+        print(hy,a)
+        """
+        a=int(abs(t))
+        print(t,a)
         if a==0: cbenc.bouger("bas",cubes,tx,ty,ceec)
         elif a==1: cbenc.bouger("gauche",cubes,tx,ty,ceec)
         elif a==2: cbenc.bouger("droite",cubes,tx,ty,ceec)
@@ -389,14 +397,29 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
     pointss=[0,0]
     tps=0
     if bot==2:
-        import json,keras
-        from keras.models import model_from_json
-        json_file = open('model.json', 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        model = model_from_json(loaded_model_json)
-        model.load_weights("model.h5py")
-        model.compile(loss='mean_squared_error',optimizer='sgd',metrics=[])
+        fich="model.pt"
+        import torch
+        import torch.nn as nn
+        class Reseau(nn.Module):
+            def __init__(self):
+                super(Reseau,self).__init__()
+                self.lin1=nn.Linear(2000,1000)
+                self.lin2=nn.Linear(1000,500)
+                self.lin3=nn.Linear(500,5)
+            def forward(self,x):
+                x = x.view(-1,2000)
+                x=self.lin1(x)
+                x=nn.functional.relu(x)
+                x=self.lin2(x)
+                x=nn.functional.relu(x)
+                x=self.lin3(x)
+                return x
+        model=Reseau()
+        model.cuda()
+        optimizer = torch.optim.SGD(model.parameters(), lr = 0.001, momentum=0.9)
+        loss = nn.CrossEntropyLoss()
+        model.load_state_dict(torch.load(fich))
+    
     while encourg:
         tt=time.time()
         cubess,cubeencours,dtc,perdus,pointss,tac=ccc(cubess,cubeencours,dtc,tac,pointss,mode,tx,ty,mintac,dimtac,modecl)
@@ -404,9 +427,9 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
         if bot==1:
             bbot(cubeencours[1],cubess[1],tx,ty,cubeencours[0],dtc,tac)
         elif bot==2 and nbj==2:
-            bia(cubeencours[1],cubess[1],dtc,tac,model,cubeencours[0],tx,ty)
+            bia(cubeencours[1],cubess[1],dtc,tac,model,cubeencours[0],tx,ty,torch)
         elif bot==2 and nbj==1:
-            bia(cubeencours[0],cubess[0],dtc,tac,model,None,tx,ty)
+            bia(cubeencours[0],cubess[0],dtc,tac,model,None,tx,ty,torch)
         for event in pygame.event.get():
             if event.type==QUIT: encourg=False
             elif event.type==KEYDOWN:
@@ -438,14 +461,19 @@ def game1(dtc,dta,tac,taf,mode,tx,ty,modecl,menu,mintac,dimtac,nbj,bot):
                     if mode==4: cbs=cubess[1]
                     else: cbs=cubess[0]
                     if event.key==keys2[0]:
+                        if iaf: rtpfia(0,cubeencours[1],cbs)
                         cubeencours[1].bouger("bas",cbs,tx,ty,ceec2)
                     elif event.key==keys2[1]:
+                        if iaf: rtpfia(1,cubeencours[1],cbs)
                         cubeencours[1].bouger("gauche",cbs,tx,ty,ceec2)
                     elif event.key==keys2[2]:
+                        if iaf: rtpfia(2,cubeencours[1],cbs)
                         cubeencours[1].bouger("droite",cbs,tx,ty,ceec2)
                     elif event.key==keys2[3]:
+                        if iaf: rtpfia(3,cubeencours[1],cbs)
                         cubeencours[1].bouger("rot gauche",cbs,tx,ty,ceec2)
                     elif event.key==keys2[4]:
+                        if iaf: rtpfia(4,cubeencours[1],cbs)
                         cubeencours[1].bouger("rot droite",cbs,tx,ty,ceec2)
         if perdus[0]:
             encourg=False
@@ -640,7 +668,7 @@ def menu():
                         elif di==17: mode,nbj,bot=1,2,0
                         elif di==18: mode,nbj,bot=1,2,1
                         #elif di==19: mode,nbj,bot=1,2,2
-                        #elif di==20: mode,nbj,bot=0,1,2
+                        elif di==20: mode,nbj,bot=0,1,2
                         elif di==21: modecl=3
                         elif di==22: mode,nbj,bot=4,2,0
                         elif di==23: mode,nbj,bot=4,2,1
