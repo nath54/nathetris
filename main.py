@@ -1,4 +1,5 @@
 #coding:utf-8
+#!/bin/python3
 import random,time,pygame,numpy,os
 from pygame.locals import *
 
